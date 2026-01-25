@@ -1,0 +1,44 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+class CreateTemplateQuestionsTable extends Migration
+{
+    /**
+     * Run the migrations.
+     *
+     * @return void
+     */
+    public function up()
+    {
+        Schema::create('template_questions', function (Blueprint $table) {
+            $table->bigIncrements('id');
+
+            $table->unsignedBigInteger('template_version_id');
+            $table->string('section', 150)->nullable(); // DATOS PERSONALES, etc.
+            $table->text('text');
+            $table->string('type', 30); // text|single_choice|multiple_choice|likert
+            $table->boolean('required')->default(true);
+            $table->unsignedInteger('order')->default(1);
+
+            $table->timestamps();
+
+            $table->foreign('template_version_id')->references('id')->on('test_template_versions')->onDelete('cascade');
+
+            $table->unique(['template_version_id', 'order']);
+            $table->index(['template_version_id', 'type']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     *
+     * @return void
+     */
+    public function down()
+    {
+        Schema::dropIfExists('template_questions');
+    }
+}
