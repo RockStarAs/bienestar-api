@@ -11,4 +11,21 @@ class TestTemplate extends Model
     const STATUS_PUBLISHED = 'published';
 
     use HasFactory;
+
+    protected $fillable = [
+        "name",
+        "description",
+        "status",
+        "created_by",
+    ];
+
+    public function versions()
+    {
+        return $this->hasMany(TestTemplateVersion::class, 'template_id');
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
 }
