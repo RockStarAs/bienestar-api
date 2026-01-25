@@ -9,6 +9,9 @@ use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
+    const ROLE_ADMIN = 'admin';
+    const ROLE_APLICADOR = 'aplicador';
+    
     use HasFactory, Notifiable;
 
     /**
