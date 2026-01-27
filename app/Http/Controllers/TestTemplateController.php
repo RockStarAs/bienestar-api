@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StoreTemplateRequest;
 use App\Http\Requests\UpdateTemplateRequest;
 use App\Models\TestTemplate;
 use Illuminate\Http\Request;
@@ -35,6 +36,17 @@ class TestTemplateController extends Controller
 
         $template = $q->firstOrFail();
         return response()->json($template);
+    }
+
+    public function store(StoreTemplateRequest $request){
+        $template = TestTemplate::create([
+            'name' => $request->name,
+            'description' => $request->description,
+            'status' => 'draft',
+            'created_by' => $request->user()->id,
+        ]);
+
+        return response()->json($template, 201);
     }
 
     public function update(UpdateTemplateRequest $request, $id){
