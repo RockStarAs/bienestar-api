@@ -11,12 +11,14 @@ use Illuminate\Http\Request;
 
 class TestTemplateVersionController extends Controller
 {
-    public function indexByTemplate($templateId){
+    public function indexByTemplate($templateId,Request $request){
         $template = TestTemplate::findOrFail($templateId);
+
+        $perPage = (int) ($request->get('per_page', 10));
 
         $versions = $template->versions()
             ->orderByDesc('id')
-            ->get();
+            ->paginate($perPage);
 
         return response()->json($versions);
     }
