@@ -13,7 +13,8 @@ class UpdateTemplateRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        //TODO: definir reglas de quienes pueden hacer consultas aqui
+        return true;
     }
 
     /**
