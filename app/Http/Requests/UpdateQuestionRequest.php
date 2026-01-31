@@ -27,6 +27,15 @@ class UpdateQuestionRequest extends FormRequest
             'type' => ['sometimes', 'required', 'in:text,single_choice,multiple_choice,likert'],
             'required' => ['sometimes', 'nullable', 'boolean'],
             'order' => ['sometimes', 'nullable', 'integer', 'min:1'],
+            
+            // options es un array opcional
+            'options' => ['sometimes', 'nullable', 'array'],
+            
+            // Cada elemento del array debe tener estas propiedades
+            'options.*.id' => ['sometimes', 'nullable', 'integer', 'exists:template_question_options,id'],
+            'options.*.label' => ['required', 'string', 'max:500'],
+            'options.*.value' => ['required', 'string'], // si aplica para likert
+            'options.*.order' => ['sometimes', 'nullable', 'integer', 'min:1'],
         ];
     }
 }
