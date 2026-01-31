@@ -23,6 +23,16 @@ class TestTemplateVersionController extends Controller
         return response()->json($versions);
     }
 
+    public function findVersionByTemplate($templateId,$versionId){
+        $version = TestTemplateVersion::with('template')->findOrFail($versionId);
+        if($version->template_id == $templateId){
+            return response()->json($version);
+        }
+        return response()->json([
+            'message' => "Recurso no encontrado"
+        ],404);
+    }
+
     public function storeForTemplate(StoreTemplateVersionRequest $request, $templateId){
         $template = TestTemplate::findOrFail($templateId);
 
