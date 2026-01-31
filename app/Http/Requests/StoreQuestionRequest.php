@@ -26,7 +26,7 @@ class StoreQuestionRequest extends FormRequest
         return [
             'section' => ['nullable','string','max:200'],
             'text' => ['required','string','max:1000'],
-            'type' => ['required','in:text,single_choice,multiple_choice,likert'],
+            'type' => ['required','in:text,single_choice,multiple_choice,likert,date'],
             'required' => ['nullable','boolean'],
             'order' => ['nullable','integer','min:1'],
 

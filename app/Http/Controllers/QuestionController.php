@@ -95,8 +95,8 @@ class QuestionController extends Controller
 
             $question->save();
 
-            // si cambió a type=text, elimina opciones para mantener consistencia
-            if ($question->type === 'text') {
+            // si cambió a type=text o date, elimina opciones para mantener consistencia
+            if ($question->type === 'text' || $question->type === 'date') {
                 TemplateQuestionOption::where('question_id', $question->id)->delete();
             }
 

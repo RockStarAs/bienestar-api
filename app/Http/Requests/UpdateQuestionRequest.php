@@ -24,7 +24,7 @@ class UpdateQuestionRequest extends FormRequest
         return [
             'section' => ['sometimes', 'nullable', 'string', 'max:200'],
             'text' => ['sometimes', 'required', 'string', 'max:1000'],
-            'type' => ['sometimes', 'required', 'in:text,single_choice,multiple_choice,likert'],
+            'type' => ['sometimes', 'required', 'in:text,single_choice,multiple_choice,likert,date'],
             'required' => ['sometimes', 'nullable', 'boolean'],
             'order' => ['sometimes', 'nullable', 'integer', 'min:1'],
             
