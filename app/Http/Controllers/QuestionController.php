@@ -7,6 +7,7 @@ use App\Models\TemplateQuestion;
 use App\Models\TemplateQuestionOption;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\QuestionService;
 
 class QuestionController extends Controller
 {
@@ -33,13 +34,14 @@ class QuestionController extends Controller
      * PUT /api/questions/{questionId}
      * Actualiza pregunta (solo si versión está draft; usa middleware version.draft).
      */
-    public function update($questionId, UpdateQuestionRequest $request)
+    public function update($questionId, UpdateQuestionRequest $request, QuestionService $questionService)
     {
         $question = TemplateQuestion::findOrFail($questionId);
 
         $payload = $request->validated();
 
-        return DB::transaction(function () use ($question, $payload) {
+
+        return DB::transaction(function () use ($question, $payload, $questionService) {
             $versionId = (int) $question->template_version_id;
 
             // Si viene order y cambia, reacomoda órdenes
@@ -97,6 +99,10 @@ class QuestionController extends Controller
             if ($question->type === 'text') {
                 TemplateQuestionOption::where('question_id', $question->id)->delete();
             }
+
+            //Manejar las opciones
+            $options = $payload['options'] ?? null;
+            $questionService->syncOptions($question, $options);
 
             $question->load(['options' => function ($q) {
                 $q->orderBy('order', 'asc')->orderBy('id', 'asc');

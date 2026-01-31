@@ -8,6 +8,7 @@ use App\Models\TemplateQuestionOption;
 use App\Models\TestTemplateVersion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Services\QuestionService;
 
 class VersionQuestionController extends Controller
 {
@@ -47,7 +48,7 @@ class VersionQuestionController extends Controller
      * Crea pregunta (y opcionalmente opciones si vienen en request).
      * Regla: si order no viene, asigna siguiente.
      */
-    public function store($versionId, StoreQuestionRequest $request){
+    public function store($versionId, StoreQuestionRequest $request, QuestionService $questionService){
         $version = TestTemplateVersion::findOrFail($versionId);
 
         if ($version->status !== TestTemplateVersion::STATUS_DRAFT) {
@@ -59,7 +60,7 @@ class VersionQuestionController extends Controller
 
         $payload = $request->validated();
 
-        return DB::transaction(function () use ($version, $payload, $request) {
+        return DB::transaction(function () use ($version, $payload, $request, $questionService) {
 
             // order automático si no se envía
             $order = isset($payload['order']) && (int)$payload['order'] > 0
@@ -85,29 +86,7 @@ class VersionQuestionController extends Controller
 
             // Crear opciones opcionales si vienen
             $options = $payload['options'] ?? null;
-            if (is_array($options) && count($options) > 0) {
-                // Normaliza order de opciones si no viene
-                $usedOrders = [];
-                $nextOptOrder = 1;
-
-                foreach ($options as $opt) {
-                    $optOrder = isset($opt['order']) && (int)$opt['order'] > 0 ? (int)$opt['order'] : $nextOptOrder;
-
-                    // Evitar orders duplicados en el payload
-                    while (in_array($optOrder, $usedOrders, true)) {
-                        $optOrder++;
-                    }
-                    $usedOrders[] = $optOrder;
-                    $nextOptOrder = $optOrder + 1;
-
-                    TemplateQuestionOption::create([
-                        'question_id' => $question->id,
-                        'label' => $opt['label'],
-                        'value' => $opt['value'],
-                        'order' => $optOrder,
-                    ]);
-                }
-            }
+            $questionService->syncOptions($question, $options);
 
             // Devuelve con opciones ordenadas
             $question->load(['options' => function ($q) {
