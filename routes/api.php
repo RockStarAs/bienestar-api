@@ -32,6 +32,12 @@ Route::middleware('auth:api')->group(function () {
 });
 
 
+// Rutas Públicas (Toma de Test)
+Route::get('/public/test/{id}', [\App\Http\Controllers\PublicTestController::class, 'show']);
+Route::post('/public/test/{id}/start', [\App\Http\Controllers\PublicTestController::class, 'start']);
+Route::post('/public/test/{assignmentId}/submit', [\App\Http\Controllers\PublicTestController::class, 'submit']);
+
+
 Route::middleware(['auth:api', 'roles:admin,aplicador'])->group(function () {
 
     // Templates
