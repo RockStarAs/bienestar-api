@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OptionController;
 use App\Http\Controllers\QuestionController;
+use App\Http\Controllers\TestController;
 use App\Http\Controllers\TestTemplateController;
 use App\Http\Controllers\TestTemplateVersionController;
 use App\Http\Controllers\VersionQuestionController;
@@ -66,4 +67,11 @@ Route::middleware(['auth:api', 'roles:admin,aplicador'])->group(function () {
 
     Route::put('/options/{optionId}', [OptionController::class, 'update']);
     Route::delete('/options/{optionId}', [OptionController::class, 'destroy']);
+
+    // Tests (Aplicaciones / Periodos)
+    Route::get('/tests', [TestController::class, 'index']);
+    Route::post('/tests', [TestController::class, 'store']);
+    Route::get('/tests/{id}', [TestController::class, 'show']);
+    Route::put('/tests/{id}', [TestController::class, 'update']);
+    Route::delete('/tests/{id}', [TestController::class, 'destroy']);
 });
