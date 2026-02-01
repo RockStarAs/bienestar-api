@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreTemplateRequest;
 use App\Http\Requests\UpdateTemplateRequest;
 use App\Models\TestTemplate;
+use App\Models\TestTemplateVersion;
 use Illuminate\Http\Request;
 
 class TestTemplateController extends Controller
@@ -21,6 +22,18 @@ class TestTemplateController extends Controller
         // paginado opcional (default 10)
         $perPage = (int) ($request->get('per_page', 10));
         return response()->json($q->paginate($perPage));
+    }
+
+    //Listar los TestTemplate que tengan versiones con el estado published
+    public function getAllTemplatesWithVersionsPublished(){
+        $tests = TestTemplate::whereHas('versions', function ($query) {
+            $query->where('status', TestTemplateVersion::STATUS_PUBLISHED); // o el estatus que necesites
+        })
+        ->with(['versions' => function ($query) {
+            $query->where('status', 'published');
+        }])
+        ->get();
+        return response()->json($tests);
     }
 
     public function show($id, Request $request){
