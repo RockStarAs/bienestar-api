@@ -35,14 +35,14 @@ class TestController extends Controller
             'template_version_id' => 'required|exists:test_template_versions,id',
             'title' => 'required|string|max:200',
             'period' => 'nullable|string|max:20',
-            'status' => 'in:active,closed',
+            // 'status' => 'in:active,closed',
         ]);
 
         $test = Test::create([
             'template_version_id' => $data['template_version_id'],
             'title' => $data['title'],
             'period' => $data['period'] ?? null,
-            'status' => $data['status'] ?? Test::STATUS_ACTIVE,
+            'status' => Test::STATUS_ACTIVE,
             'created_by' => $request->user()->id,
         ]);
 
