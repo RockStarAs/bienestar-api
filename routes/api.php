@@ -46,6 +46,7 @@ Route::middleware(['auth:api', 'roles:admin,aplicador'])->group(function () {
     Route::get('/templates/{id}', [TestTemplateController::class, 'show']);
     Route::put('/templates/{id}', [TestTemplateController::class, 'update']);
     Route::delete('/templates/{id}', [TestTemplateController::class, 'destroy']); // opcional
+    Route::get('/templatesWithPublished',[TestTemplateController::class, 'getAllTemplatesWithVersionsPublished']);
 
     // Versions
     Route::get('/templates/{id}/versions', [TestTemplateVersionController::class, 'indexByTemplate']);
