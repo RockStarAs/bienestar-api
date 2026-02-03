@@ -66,7 +66,7 @@ class PublicTestController extends Controller
         $student->update([
             'name' => $request->name,
             'email' => $request->email,
-            'program' => $request->program
+            // 'program' => $request->program
         ]);
 
         // 2. Encuentra o crea Assignment
@@ -82,7 +82,7 @@ class PublicTestController extends Controller
         );
 
         if ($assignment->status === 'completed') {
-            return response()->json(['message' => 'Ya has completado este examen.'], 403);
+            return response()->json(['message' => 'Ya has completado este test.'], 403);
         }
 
         // 3. Obtiene las preguntas del Template Version
@@ -100,7 +100,7 @@ class PublicTestController extends Controller
                 'options' => $q->options->map(function($opt) {
                     return [
                         'id' => $opt->id,
-                        'text' => $opt->text,
+                        'label' => $opt->label,
                         'value' => $opt->value,
                         'order' => $opt->order
                     ];
