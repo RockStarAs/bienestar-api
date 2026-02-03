@@ -29,6 +29,10 @@ class TestTemplateVersion extends Model
         return $this->belongsTo(TestTemplate::class, 'template_id');
     }
 
+    public function questions(){
+        return $this->hasMany(TemplateQuestion::class,'template_version_id');
+    }
+
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by');
