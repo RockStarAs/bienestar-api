@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OptionController;
+use App\Http\Controllers\PublicTestController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\TestTemplateController;
@@ -33,9 +34,9 @@ Route::middleware('auth:api')->group(function () {
 
 
 // Rutas Públicas (Toma de Test)
-Route::get('/public/test/{id}', [\App\Http\Controllers\PublicTestController::class, 'show']);
-Route::post('/public/test/{id}/start', [\App\Http\Controllers\PublicTestController::class, 'start']);
-Route::post('/public/test/{assignmentId}/submit', [\App\Http\Controllers\PublicTestController::class, 'submit']);
+Route::get('/public/test/{id}', [PublicTestController::class, 'show']);
+Route::post('/public/test/{id}/start', [PublicTestController::class, 'start']);
+Route::post('/public/test/{assignmentId}/submit', [PublicTestController::class, 'submit']);
 
 
 Route::middleware(['auth:api', 'roles:admin,aplicador'])->group(function () {
