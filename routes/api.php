@@ -8,6 +8,7 @@ use App\Http\Controllers\TestController;
 use App\Http\Controllers\TestTemplateController;
 use App\Http\Controllers\TestTemplateVersionController;
 use App\Http\Controllers\VersionQuestionController;
+use App\Http\Controllers\ResultsController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -82,4 +83,9 @@ Route::middleware(['auth:api', 'roles:admin,aplicador'])->group(function () {
     Route::get('/tests/{id}', [TestController::class, 'show']);
     Route::put('/tests/{id}', [TestController::class, 'update']);
     Route::delete('/tests/{id}', [TestController::class, 'destroy']);
+
+    // Resultados
+    Route::get('/results/filters', [ResultsController::class, 'filters']);
+    Route::get('/results/export', [ResultsController::class, 'export']);
+    Route::get('/results', [ResultsController::class, 'index']);
 });
