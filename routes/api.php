@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\OptionController;
+use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\PublicTestController;
 use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\TestController;
@@ -88,4 +89,11 @@ Route::middleware(['auth:api', 'roles:admin,aplicador'])->group(function () {
     Route::get('/results/filters', [ResultsController::class, 'filters']);
     Route::get('/results/export', [ResultsController::class, 'export']);
     Route::get('/results', [ResultsController::class, 'index']);
+});
+
+// Admin-only routes
+Route::middleware(['auth:api', 'roles:admin'])->group(function () {
+    // Periods (Admin Configuration)
+    Route::apiResource('periods', PeriodController::class);
+    Route::get('periods/{period}/dependencies', [PeriodController::class, 'dependencies']);
 });
