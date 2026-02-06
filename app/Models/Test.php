@@ -15,7 +15,7 @@ class Test extends Model
     protected $fillable = [
         'template_version_id',
         'title',
-        'period',
+        'period_id',
         'status',
         'created_by'
     ];
@@ -33,5 +33,10 @@ class Test extends Model
     public function assignments()
     {
         return $this->hasMany(TestAssignment::class);
+    }
+
+    public function period()
+    {
+        return $this->belongsTo(Period::class);
     }
 }
