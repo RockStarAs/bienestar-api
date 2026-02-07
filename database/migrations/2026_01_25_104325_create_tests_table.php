@@ -19,7 +19,6 @@ class CreateTestsTable extends Migration
 
             $table->unsignedBigInteger('template_version_id');
             $table->string('title', 200);
-            $table->string('period', 20)->nullable(); // 2025-I, 2026-I, etc.
             $table->string('status', 20)->default(Test::STATUS_ACTIVE); // active|closed
             $table->unsignedBigInteger('created_by');
 

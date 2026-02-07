@@ -15,7 +15,7 @@ class AddPeriodIdToTestsTable extends Migration
     {
         Schema::table('tests', function (Blueprint $table) {
             // Add period_id column as nullable foreign key
-            $table->unsignedBigInteger('period_id')->nullable()->after('period');
+            $table->unsignedBigInteger('period_id')->nullable()->after('title');
             
             // Create foreign key constraint with ON DELETE SET NULL
             $table->foreign('period_id')->references('id')->on('periods')->onDelete('set null');
