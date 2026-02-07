@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\Test;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 
 class TestController extends Controller
 {
@@ -34,14 +33,14 @@ class TestController extends Controller
         $data = $request->validate([
             'template_version_id' => 'required|exists:test_template_versions,id',
             'title' => 'required|string|max:200',
-            'period' => 'nullable|string|max:20',
+            'period_id' => 'required|exists:periods,id',
             // 'status' => 'in:active,closed',
         ]);
 
         $test = Test::create([
             'template_version_id' => $data['template_version_id'],
             'title' => $data['title'],
-            'period' => $data['period'] ?? null,
+            'period_id' => $data['period_id'],
             'status' => Test::STATUS_ACTIVE,
             'created_by' => $request->user()->id,
         ]);
@@ -73,7 +72,6 @@ class TestController extends Controller
 
         $data = $request->validate([
             'title' => 'sometimes|string|max:200',
-            'period' => 'nullable|string|max:20',
             'status' => 'in:active,closed',
         ]);
 

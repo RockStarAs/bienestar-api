@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Period;
 use Illuminate\Http\Request;
 use App\Models\TestAssignment;
 use App\Models\Test;
@@ -18,15 +19,15 @@ class ResultsController extends Controller
     public function filters()
     {
         // Tests activos con sus versiones
-        $tests = Test::with(['templateVersion.template'])
+        $tests = Test::with(['templateVersion.template','period'])
             ->where('status', 'active')
             ->orWhere('status', 'closed')
             ->get()
             ->map(function ($test) {
                 return [
                     'id' => $test->id,
-                    'label' => $test->templateVersion->template->name . ' - ' . $test->period,
-                    'period' => $test->period,
+                    'label' => $test->templateVersion->template->name . ' - ' . $test->period->name,
+                    'period_id' => $test->period->id,
                     'version_id' => $test->template_version_id,
                     'version_name' => 'v' . $test->templateVersion->version,
                     'template_name' => $test->templateVersion->template->name,
@@ -34,9 +35,11 @@ class ResultsController extends Controller
             });
 
         // Periodos únicos
-        $periods = Test::distinct()
-            ->pluck('period')
-            ->filter()
+        $periods = Period::query()
+            ->whereHas('tests')
+            ->select('id', 'name')
+            ->orderBy('name')
+            ->get()
             ->values();
 
         // Versiones con plantillas
@@ -84,9 +87,9 @@ class ResultsController extends Controller
         }
 
         // Filtrar por periodo
-        if ($request->has('period') && $request->period) {
+        if ($request->has('period_id') && $request->period_id) {
             $query->whereHas('test', function ($q) use ($request) {
-                $q->where('period', $request->period);
+                $q->where('period_id', $request->period_id);
             });
         }
 
@@ -153,9 +156,9 @@ class ResultsController extends Controller
             });
         }
 
-        if ($request->has('period') && $request->period) {
+        if ($request->has('period_id') && $request->period_id) {
             $query->whereHas('test', function ($q) use ($request) {
-                $q->where('period', $request->period);
+                $q->where('period_id', $request->period_id);
             });
         }
 
