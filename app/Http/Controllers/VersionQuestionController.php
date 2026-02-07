@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreQuestionRequest;
 use App\Models\TemplateQuestion;
-use App\Models\TemplateQuestionOption;
 use App\Models\TestTemplateVersion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -58,34 +57,12 @@ class VersionQuestionController extends Controller
             ], 409);
         }
 
-        $payload = $request->validated();
 
-        return DB::transaction(function () use ($version, $payload, $request, $questionService) {
-
-            // order automático si no se envía
-            $order = isset($payload['order']) && (int)$payload['order'] > 0
-                ? (int) $payload['order']
-                : ((int) TemplateQuestion::where('template_version_id', $version->id)->max('order') + 1);
-
-            // Si el order viene "en medio", corremos hacia abajo (no pisar)
-            // Ej: insertar en order=2 desplaza >=2 +1
-            if (isset($payload['order']) && (int)$payload['order'] > 0) {
-                TemplateQuestion::where('template_version_id', $version->id)
-                    ->where('order', '>=', $order)
-                    ->increment('order');
-            }
-
-            $question = TemplateQuestion::create([
-                'template_version_id' => $version->id,
-                'section' => $payload['section'] ?? null,
-                'text' => $payload['text'],
-                'type' => $payload['type'],
-                'required' => array_key_exists('required', $payload) ? (bool)$payload['required'] : false,
-                'order' => $order,
-            ]);
+        return DB::transaction(function () use ($version, $request, $questionService) {
+            $question = $questionService->storeQuestion($version->id,$request);
 
             // Crear opciones opcionales si vienen
-            $options = $payload['options'] ?? null;
+            $options = $request->options();
             $questionService->syncOptions($question, $options);
 
             // Devuelve con opciones ordenadas
@@ -100,97 +77,20 @@ class VersionQuestionController extends Controller
         });
     }
 
-    /**
-     * PATCH /api/versions/{versionId}/questions/reorder
-     * Reordena preguntas. Acepta:
-     * { "items": [ {"id": 10, "order": 1}, {"id": 11, "order": 2} ] }
-     * o
-     * { "ids": [10, 11, 12] }  => order = index+1
-     */
-    public function reorder($versionId, Request $request){
-        $version = TestTemplateVersion::findOrFail($versionId);
+    public function update($questionId, StoreQuestionRequest $request, QuestionService $questionService){
+        $question = TemplateQuestion::findOrFail($questionId);
 
-        if ($version->status !== TestTemplateVersion::STATUS_DRAFT) {
+        if ($question->itsVersionIsPublished()) {
             return response()->json([
-                'message' => 'No se permiten cambios: la versión está publicada.',
+                'message' => 'No se permiten cambios: la versión de esta pregunta está publicada.',
                 'code' => 'VERSION_LOCKED'
             ], 409);
         }
 
-        $request->validate([
-            'items' => ['nullable', 'array', 'min:1'],
-            'items.*.id' => ['required_with:items', 'integer'],
-            'items.*.order' => ['required_with:items', 'integer', 'min:1'],
-
-            'ids' => ['nullable', 'array', 'min:1'],
-            'ids.*' => ['integer'],
-        ]);
-
-        $items = $request->input('items');
-        $ids = $request->input('ids');
-
-        if (!$items && !$ids) {
-            return response()->json([
-                'message' => 'Debes enviar "items" o "ids".',
-                'code' => 'INVALID_PAYLOAD'
-            ], 422);
-        }
-
-        return DB::transaction(function () use ($version, $items, $ids) {
-
-            // IDs válidos de esta versión
-            $validIds = TemplateQuestion::where('template_version_id', $version->id)->pluck('id')->toArray();
-
-            if ($ids) {
-                // Verifica que todos pertenezcan a la versión
-                foreach ($ids as $qid) {
-                    if (!in_array((int)$qid, $validIds, true)) {
-                        return response()->json([
-                            'message' => 'Una o más preguntas no pertenecen a esta versión.',
-                            'code' => 'QUESTION_VERSION_MISMATCH'
-                        ], 409);
-                    }
-                }
-
-                // Aplica orden index+1
-                foreach ($ids as $idx => $qid) {
-                    TemplateQuestion::where('id', $qid)
-                        ->where('template_version_id', $version->id)
-                        ->update(['order' => $idx + 1]);
-                }
-            } else {
-                // items con {id, order}
-                foreach ($items as $it) {
-                    $qid = (int) $it['id'];
-                    if (!in_array($qid, $validIds, true)) {
-                        return response()->json([
-                            'message' => 'Una o más preguntas no pertenecen a esta versión.',
-                            'code' => 'QUESTION_VERSION_MISMATCH'
-                        ], 409);
-                    }
-                }
-
-                // Normaliza: ordena por order y reasigna secuencial para evitar duplicados/huecos
-                usort($items, fn($a, $b) => (int)$a['order'] <=> (int)$b['order']);
-
-                $seq = 1;
-                foreach ($items as $it) {
-                    TemplateQuestion::where('id', (int)$it['id'])
-                        ->where('template_version_id', $version->id)
-                        ->update(['order' => $seq]);
-                    $seq++;
-                }
-            }
-
-            $updated = TemplateQuestion::where('template_version_id', $version->id)
-                ->orderBy('order', 'asc')
-                ->orderBy('id', 'asc')
-                ->get();
-
-            return response()->json([
-                'message' => 'Orden actualizado correctamente.',
-                'data' => $updated
-            ]);
-        });
+        $questionUpdated = $questionService->editQuestion($questionId,$request,$question);
+        return response()->json([
+            'message' => 'Pregunta modificada correctamente.',
+            'data' => $question
+        ], 201);
     }
 }

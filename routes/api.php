@@ -1,10 +1,8 @@
 <?php
 
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\OptionController;
 use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\PublicTestController;
-use App\Http\Controllers\QuestionController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\TestTemplateController;
 use App\Http\Controllers\TestTemplateVersionController;
@@ -62,21 +60,7 @@ Route::middleware(['auth:api', 'roles:admin,aplicador'])->group(function () {
     // Preguntas
     Route::get('/versions/{versionId}/questions', [VersionQuestionController::class, 'index']);
     Route::post('/versions/{versionId}/questions', [VersionQuestionController::class, 'store']);
-
-    Route::patch('/versions/{versionId}/questions/reorder', [VersionQuestionController::class, 'reorder']);
-
-    Route::get('/questions/{questionId}', [QuestionController::class, 'show']);
-    Route::put('/questions/{questionId}', [QuestionController::class, 'update']);
-    Route::delete('/questions/{questionId}', [QuestionController::class, 'destroy']);
-
-    // Opciones
-    Route::get('/questions/{questionId}/options', [OptionController::class, 'index']);
-    Route::post('/questions/{questionId}/options', [OptionController::class, 'store']);
-
-    Route::patch('/questions/{questionId}/options/reorder', [OptionController::class, 'reorder']);
-
-    Route::put('/options/{optionId}', [OptionController::class, 'update']);
-    Route::delete('/options/{optionId}', [OptionController::class, 'destroy']);
+    Route::put('/questions/{questionId}',[VersionQuestionController::class,'update']);
 
     // Tests (Aplicaciones / Periodos)
     Route::get('/tests', [TestController::class, 'index']);
