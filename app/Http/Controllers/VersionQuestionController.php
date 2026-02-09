@@ -24,8 +24,12 @@ class VersionQuestionController extends Controller
 
         $q = TemplateQuestion::query()
             ->where('template_version_id', $version->id)
+            ->whereNull('parent_question_id') // Solo preguntas raíz (padres o independientes)
             ->orderBy('order', 'asc')
-            ->orderBy('id', 'asc');
+            ->orderBy('id', 'asc')
+            ->with(['children' => function($q) {
+                $q->orderBy('order', 'asc');
+            }]);
 
         if ($includeOptions) {
             $q->with(['options' => function ($q) {
@@ -90,7 +94,7 @@ class VersionQuestionController extends Controller
         $questionUpdated = $questionService->editQuestion($questionId,$request,$question);
         return response()->json([
             'message' => 'Pregunta modificada correctamente.',
-            'data' => $question
+            'data' => $questionUpdated
         ], 201);
     }
 }

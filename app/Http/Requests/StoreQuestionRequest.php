@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Models\TemplateQuestion;
+use App\Support\ChildQuestionRequest;
 use App\Support\QuestionOptionRequest;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -36,9 +37,16 @@ class StoreQuestionRequest extends FormRequest
 
             // crear opciones en el mismo POST
             'options' => ['nullable','array','min:2'],
-            'options.*.label' => ['required_with:options','string','max:255'],
-            'options.*.value' => ['required_with:options','string','max:100'],
+            'options.*.label' => ['required_with:options','string','max:1000'],
+            'options.*.value' => ['required_with:options','string','max:1000'],
             'options.*.order' => ['nullable','integer','min:1'],
+
+            // childQuestions (preguntas hijas)
+            'childQuestions' => ['sometimes','array','min:2'],
+            'childQuestions.*.text' => ['required_with:options','string','max:1000'],
+            'childQuestions.*.id' => ['sometimes', 'integer'],
+            'childQuestions.*.order' => ['nullable','integer','min:1'],
+
         ];
     }
 
@@ -109,5 +117,27 @@ class StoreQuestionRequest extends FormRequest
         return array_map(static function (array $opt): QuestionOptionRequest {
             return QuestionOptionRequest::fromArray($opt);
         }, $options);
+    }
+
+    /**
+     * @return array<int, array{text:string,order?:int|null}>|null
+     */
+    public function childQuestions(): ?array {
+        /** @var array<int, array{label:string,value:string,order?:int|null}>|null $v */
+        $v = $this->input('childQuestions');
+        return $v;
+    }
+
+    /** @return ChildQuestionRequest[] */
+    public function childQuestionsObjects(): array {
+        $childQuestions = $this->childQuestions();
+
+        if (!$childQuestions) {
+            return [];
+        }
+
+        return array_map(static function (array $opt): ChildQuestionRequest {
+            return ChildQuestionRequest::fromArray($opt);
+        }, $childQuestions);
     }
 }

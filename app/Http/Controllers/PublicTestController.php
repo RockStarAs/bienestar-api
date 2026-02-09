@@ -89,12 +89,15 @@ class PublicTestController extends Controller
         // Necesitamos la estructura [section -> questions] o lista plana
         $version = TestTemplateVersion::with(['questions.options'])->findOrFail($test->template_version_id);
         
-        $questions = $version->questions->map(function($q) {
+        $questions = $version->questions->filter(function($el){
+            return $el->parent_question_id == null;
+        })->map(function($q) {
             return [
                 'id' => $q->id,
                 'text' => $q->text,
                 'type' => $q->type,
                 'section' => $q->section,
+                'parent_question_id' => $q->parent_question_id,
                 'order' => $q->order,
                 'required' => $q->required,
                 'options' => $q->options->map(function($opt) {
@@ -103,6 +106,16 @@ class PublicTestController extends Controller
                         'label' => $opt->label,
                         'value' => $opt->value,
                         'order' => $opt->order
+                    ];
+                }),
+                'children' => $q->children->map(function($chQ){
+                    return [
+                        'id' => $chQ->id,
+                        'text' => $chQ->text,
+                        'type' => $chQ->type,
+                        'section' => $chQ->section,
+                        'order' => $chQ->order,
+                        'required' => $chQ->required,
                     ];
                 })
             ];

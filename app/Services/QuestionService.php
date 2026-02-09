@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Http\Requests\StoreQuestionRequest;
 use App\Models\TemplateQuestion;
 use App\Models\TemplateQuestionOption;
+use Exception;
 use Illuminate\Support\Facades\DB;
 
 class QuestionService
@@ -59,12 +60,65 @@ class QuestionService
             //actualizar opciones en caso llegue
             $this->syncOptions($question, $r->options());
 
+            //Tratamiento especial para las preguntas agrupadas (importante, si no me manda el tipo explicitamente, en la request)
+            //no trabaja acá, por lo que por ejemplo si es un caso de solo ordenamiento no le afectara a sus preguntas (importante)
+            if($r->type() == TemplateQuestion::TYPE_GROUPED){
+                // Validar al menos 1? (o 0 si se permite grupo vacío)
+                $children = $r->childQuestionsObjects();
+                if(count($children) < 1 && 1==0){ // Desactivado check por ahora o ajustar lógica
+                    throw new Exception("Error, no hay preguntas suficientes para crear una pregunta agrupada.");
+                }
+                // Actualizar hijos
+                $this->manageChildQuestion($question, $children);
+            }
+
             return $question->fresh(['options']);
         });
     }
 
+    private function manageChildQuestion(TemplateQuestion $parentQuestion, array $childQuestionRequests){
+        // Estrategia: Sincronizar (Crear, Actualizar, Borrar)
+
+        // 1. Obtener IDs recibidos que no sean nulos
+        $receivedIds = [];
+        foreach ($childQuestionRequests as $req) {
+            if ($req->id) {
+                $receivedIds[] = $req->id;
+            }
+        }
+
+        // 2. Eliminar hijos que ya no están en la lista (Delete)
+        $parentQuestion->children()
+            ->whereNotIn('id', $receivedIds)
+            ->delete();
+
+        // 3. Iterar para Crear o Actualizar
+        foreach ($childQuestionRequests as $index => $childRequest) {
+            // Datos comunes
+            $data = [
+                'template_version_id' => $parentQuestion->template_version_id,
+                'section' => $parentQuestion->section,
+                'text' => $childRequest->text,
+                'type' => TemplateQuestion::TYPE_GROUPED_CHILD,
+                'required' => $parentQuestion->required,
+                'parent_question_id' => $parentQuestion->id,
+                'order' => $childRequest->order ?? ($index + 1),
+            ];
+
+            if ($childRequest->id) {
+                // Update
+                TemplateQuestion::where('id', $childRequest->id)
+                    ->where('parent_question_id', $parentQuestion->id) // Security check
+                    ->update($data);
+            } else {
+                // Create
+                TemplateQuestion::create($data);
+            }
+        }
+    }
+
     
-    public function createQuestion(int $versionId, StoreQuestionRequest $questionRequest,int $pOrder){
+    public function createQuestion(int $versionId, StoreQuestionRequest $questionRequest, int $pOrder){
         //Preparar los datos agregar
         $templateVersionId = $versionId;
         $section =           $questionRequest->section();
@@ -76,7 +130,7 @@ class QuestionService
         $parentQuestionId =  null;
         $order =             $pOrder;
         
-        return TemplateQuestion::create([
+        $question = TemplateQuestion::create([
             'template_version_id' => $templateVersionId,
             'section' => $section,
             'title' => $title,
@@ -87,12 +141,26 @@ class QuestionService
             'parent_question_id' => $parentQuestionId,
             'order' => $order,
         ]);
+
+        // Manejar hijos si es tipo agrupado
+        if ($type === TemplateQuestion::TYPE_GROUPED) {
+            $this->manageChildQuestion($question, $questionRequest->childQuestionsObjects());
+        }
+
+        return $question;
     }
             
-    public function reorderQuestions(int $versionId, int $currentOrderToInsert){
-        TemplateQuestion::where('template_version_id', $versionId)
-            ->where('order', '>=', $currentOrderToInsert)
-            ->increment('order');
+    public function reorderQuestions(int $versionId, int $currentOrderToInsert, ?int $parentQuestionId = null){
+        $q = TemplateQuestion::where('template_version_id', $versionId)
+            ->where('order', '>=', $currentOrderToInsert);
+            
+        if(is_null($parentQuestionId)){
+            $q->whereNull('parent_question_id');
+        } else {
+            $q->where('parent_question_id', $parentQuestionId);
+        }
+            
+        $q->increment('order');
     }
 
     /**
@@ -100,18 +168,29 @@ class QuestionService
     */
     public function moveQuestionOrder(int $versionId, int $oldOrder, int $newOrder, int $questionId): void
     {
+        // Obtener el scope de la pregunta (si es hija o raíz)
+        $question = TemplateQuestion::find($questionId);
+        $parentId = $question ? $question->parent_question_id : null;
+
+        $query = TemplateQuestion::where('template_version_id', $versionId)
+            ->where('id', '!=', $questionId);
+
+        if(is_null($parentId)){
+            $query->whereNull('parent_question_id');
+        } else {
+            $query->where('parent_question_id', $parentId);
+        }
+
         if ($newOrder < $oldOrder) {
             // sube: empuja hacia abajo a las que estaban en el rango
-            TemplateQuestion::where('template_version_id', $versionId)
-                ->where('id', '!=', $questionId)
-                ->whereBetween('order', [$newOrder, $oldOrder - 1])
-                ->increment('order');
+            $query->whereBetween('order', [$newOrder, $oldOrder - 1])
+                  ->orderBy('order', 'desc') // Orden inverso para evitar colisiones al subir (aunque increment es set based, a veces ayuda)
+                  ->increment('order');
         } else {
             // baja: jala hacia arriba a las que estaban en el rango
-            TemplateQuestion::where('template_version_id', $versionId)
-                ->where('id', '!=', $questionId)
-                ->whereBetween('order', [$oldOrder + 1, $newOrder])
-                ->decrement('order');
+            $query->whereBetween('order', [$oldOrder + 1, $newOrder])
+                  ->orderBy('order', 'asc')
+                  ->decrement('order');
         }
     }
 

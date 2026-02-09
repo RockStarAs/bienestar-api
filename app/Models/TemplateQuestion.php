@@ -57,7 +57,11 @@ class TemplateQuestion extends Model
 
     //Usar con cuidado
     public function parentQuestion(){
-        return $this->hasOne(TemplateQuestion::class,'parent_question_id');
+        return $this->belongsTo(TemplateQuestion::class,'parent_question_id');
+    }
+
+    public function children(){
+        return $this->hasMany(TemplateQuestion::class, 'parent_question_id')->orderBy('order');
     }
 
     public function isParentQuestion(){
