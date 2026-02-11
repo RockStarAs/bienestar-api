@@ -8,6 +8,7 @@ use App\Http\Controllers\TestTemplateController;
 use App\Http\Controllers\TestTemplateVersionController;
 use App\Http\Controllers\VersionQuestionController;
 use App\Http\Controllers\ResultsController;
+use App\Http\Controllers\UserController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -80,4 +81,10 @@ Route::middleware(['auth:api', 'roles:admin'])->group(function () {
     // Periods (Admin Configuration)
     Route::apiResource('periods', PeriodController::class);
     Route::get('periods/{period}/dependencies', [PeriodController::class, 'dependencies']);
+
+    //Gestión de administrador
+    Route::get('/users', [UserController::class, 'index']);
+    Route::post('/users', [UserController::class, 'store']);
+    Route::put('/users/{id}', [UserController::class, 'update']);
+
 });

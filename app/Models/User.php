@@ -11,6 +11,11 @@ class User extends Authenticatable
 {
     const ROLE_ADMIN = 'admin';
     const ROLE_APLICADOR = 'aplicador';
+
+    const TYPES = [
+        self::ROLE_ADMIN,
+        self::ROLE_APLICADOR
+    ];
     
     use HasFactory, Notifiable,HasApiTokens;
 
