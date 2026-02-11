@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\PeriodController;
 use App\Http\Controllers\PublicTestController;
 use App\Http\Controllers\TestController;
@@ -82,9 +83,14 @@ Route::middleware(['auth:api', 'roles:admin'])->group(function () {
     Route::apiResource('periods', PeriodController::class);
     Route::get('periods/{period}/dependencies', [PeriodController::class, 'dependencies']);
 
-    //Gestión de administrador
+    //Gestión de usuarios
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
     Route::put('/users/{id}', [UserController::class, 'update']);
+
+    //Gestión de facultades
+    Route::get('/faculty', [FacultyController::class, 'index']);
+    Route::post('/faculty', [FacultyController::class, 'store']);
+    Route::put('/faculty/{id}', [FacultyController::class, 'update']);
 
 });
