@@ -26,6 +26,25 @@ class ProgramController extends Controller
         return response()->json($query->paginate($perPage));
     }
 
+    public function programsByFaculty(Request $request,$id){
+        $perPage = (int) $request->get('per_page', 10);
+        $search = $request->get('search', '');
+
+        $query = Program::with('faculty')->select()->where('faculty_id',$id)->orderBy('created_at');
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%") 
+                ->orWhereHas('faculty', function ($fq) use ($search) {
+                    $fq->where('name', 'like', "%{$search}%")
+                    ->orWhere('abrev','like',"%{$search}%");
+                });
+            });
+        }
+
+        return response()->json($query->paginate($perPage));
+    }
+
     public function store(Request $request){
         $data = $request->validate([
             'faculty_id' => 'required|integer|exists:faculties,id',

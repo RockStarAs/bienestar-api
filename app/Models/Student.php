@@ -13,6 +13,10 @@ class Student extends Model
         'dni',
         'name',
         'email',
-        'program'
+        'program_id'
     ];
+
+    public function program(){
+        return $this->belongsTo(Program::class, 'program_id');
+    }
 }

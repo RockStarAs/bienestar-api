@@ -40,10 +40,10 @@ class PublicTestController extends Controller
     public function start(Request $request, $id)
     {
         $request->validate([
-            'dni' => 'required|string|max:20',
+            'dni' => ['required', 'string', 'regex:/^\d+$/', 'digits:8'],
             'name' => 'required|string|max:150',
             'email' => 'nullable|email|max:150',
-            'program' => 'nullable|string|max:150',
+            'program.id' => 'required|integer|exists:programs,id',
         ]);
 
         $test = Test::findOrFail($id);
@@ -58,13 +58,13 @@ class PublicTestController extends Controller
             [
                 'name' => $request->name,
                 'email' => $request->email,
-                'program' => $request->program
+                'program_id' => $request->program['id']
             ]
         );
         
         // Actualiza la informacion del estudiante si hubo cambios
         $student->update([
-            'name' => $request->name,
+            // 'name' => $request->name, //ya no actualizar el nombre
             'email' => $request->email,
             // 'program' => $request->program
         ]);
@@ -91,7 +91,9 @@ class PublicTestController extends Controller
         
         $questions = $version->questions->filter(function($el){
             return $el->parent_question_id == null;
-        })->map(function($q) {
+        })
+        ->values()
+        ->map(function($q) {
             return [
                 'id' => $q->id,
                 'text' => $q->text,

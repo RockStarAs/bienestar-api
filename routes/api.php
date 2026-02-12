@@ -40,6 +40,8 @@ Route::middleware('auth:api')->group(function () {
 Route::get('/public/test/{id}', [PublicTestController::class, 'show']);
 Route::post('/public/test/{id}/start', [PublicTestController::class, 'start']);
 Route::post('/public/test/{assignmentId}/submit', [PublicTestController::class, 'submit']);
+Route::get('/public/faculty', [FacultyController::class, 'index']);
+Route::get('/public/faculty/{id}/program', [ProgramController::class, 'programsByFaculty']);
 
 
 Route::middleware(['auth:api', 'roles:admin,aplicador'])->group(function () {
