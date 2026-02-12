@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\FacultyController;
 use App\Http\Controllers\PeriodController;
+use App\Http\Controllers\ProgramController;
 use App\Http\Controllers\PublicTestController;
 use App\Http\Controllers\TestController;
 use App\Http\Controllers\TestTemplateController;
@@ -92,5 +93,10 @@ Route::middleware(['auth:api', 'roles:admin'])->group(function () {
     Route::get('/faculty', [FacultyController::class, 'index']);
     Route::post('/faculty', [FacultyController::class, 'store']);
     Route::put('/faculty/{id}', [FacultyController::class, 'update']);
+
+    //Gestión de carreras
+    Route::get('/program', [ProgramController::class, 'index']);
+    Route::post('/program', [ProgramController::class, 'store']);
+    Route::put('/program/{id}', [ProgramController::class, 'update']);
 
 });

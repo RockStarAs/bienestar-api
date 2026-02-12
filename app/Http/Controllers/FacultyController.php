@@ -9,8 +9,17 @@ class FacultyController extends Controller
 {
     public function index(Request $request){
         $perPage = (int) $request->get('per_page', 10);
+        $search = $request->get('search', '');
+
 
         $query = Faculty::select()->orderBy('created_at');
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%") 
+                ->orWhere('abrev','like', "%{$search}%");
+            });
+        }
 
         return response()->json($query->paginate($perPage));
     }
